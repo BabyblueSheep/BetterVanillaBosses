@@ -1,0 +1,3 @@
+displayName = Better Vanilla Bosses
+author = babybluesheep
+version = 0.1

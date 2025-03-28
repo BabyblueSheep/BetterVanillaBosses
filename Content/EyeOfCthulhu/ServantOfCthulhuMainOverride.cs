@@ -18,6 +18,8 @@ internal sealed class ServantOfCthulhuMainOverride : GlobalNPC
         return lateInstantiation && entity.type == NPCID.ServantofCthulhu;
     }
 
+    public override bool InstancePerEntity => true;
+
     public override bool PreAI(NPC npc)
     {
         return false;

@@ -52,6 +52,8 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
         return lateInstantiation && entity.type == NPCID.EyeofCthulhu;
     }
 
+    public override bool InstancePerEntity => true;
+
     public override bool PreAI(NPC npc)
     {
         GeneralState currentState = new GeneralState(npc);

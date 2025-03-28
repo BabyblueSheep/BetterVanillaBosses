@@ -24,6 +24,12 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
         Phase1_Attack_BigCharge,
     }
 
+    public enum StageType
+    {
+        Spawned,
+        Phase1,
+    }
+
     public ref struct GeneralState(NPC npc)
     {
         private NPC _npc = npc;
@@ -34,16 +40,16 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             set => _npc.ai[0] = (float)value;
         }
         public ref float Timer => ref _npc.ai[1];
+        public StageType CurrentStageType
+        {
+            get => (StageType)(int)_npc.ai[2];
+            set => _npc.ai[2] = (float)value;
+        }
     }
 
     public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
     {
         return lateInstantiation && entity.type == NPCID.EyeofCthulhu;
-    }
-
-    public override void SpawnNPC(int npc, int tileX, int tileY)
-    {
-        base.SpawnNPC(npc, tileX, tileY);
     }
 
     public override bool PreAI(NPC npc)
@@ -62,6 +68,12 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             npc.velocity.Y -= 0.04f;
             npc.EncourageDespawn(10);
             return false;
+        }
+
+        if (currentState.CurrentStageType == StageType.Spawned)
+        {
+            Phase1_EnterIdleState(npc);
+            currentState.CurrentStageType = StageType.Phase1;
         }
 
         switch (currentState.CurrentBehaviorType)

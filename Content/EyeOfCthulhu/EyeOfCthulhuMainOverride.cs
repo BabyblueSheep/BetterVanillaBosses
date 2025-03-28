@@ -21,7 +21,7 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
         Idle_StayToLeft,
         Idle_StayToRight,
 
-        Phase1_Attack_BigCharge,
+        Phase1_Attack_BigDash,
     }
 
     public enum StageType
@@ -85,8 +85,8 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             case BehaviorType.Idle_StayToRight:
                 Idle(npc);
                 break;
-            case BehaviorType.Phase1_Attack_BigCharge:
-                Phase1_Attack_BigCharge(npc);
+            case BehaviorType.Phase1_Attack_BigDash:
+                Phase1_Attack_BigDash(npc);
                 break;
         }
 

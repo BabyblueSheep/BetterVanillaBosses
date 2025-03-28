@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
@@ -12,20 +13,20 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
 {
     partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
     {
-        private void Phase1_EnterAttackState(NPC npc)
+        private static void Phase1_EnterAttackState(NPC npc)
         {
             ref float generalTimer = ref npc.ai[1];
 
-            WeightedRandom<EyeOfCthulhuState> randomAttackState = new WeightedRandom<EyeOfCthulhuState>();
-            randomAttackState.Add(EyeOfCthulhuState.Phase1_Attack_BigCharge);
-            EyeOfCthulhuState definitiveAttackState = randomAttackState.Get();
+            WeightedRandom<BehaviorType> randomAttackState = new WeightedRandom<BehaviorType>();
+            randomAttackState.Add(BehaviorType.Phase1_Attack_BigCharge);
+            BehaviorType definitiveAttackState = randomAttackState.Get();
             npc.ai[0] = (int)definitiveAttackState;
 
             generalTimer = 0;
 
             switch (definitiveAttackState)
             {
-                case EyeOfCthulhuState.Phase1_Attack_BigCharge:
+                case BehaviorType.Phase1_Attack_BigCharge:
                     Vector2 targetVelocity = (Main.player[npc.target].Center - npc.Center).SafeNormalize(Vector2.One);
                     npc.localAI[0] = targetVelocity.X;
                     npc.localAI[1] = targetVelocity.Y;
@@ -36,7 +37,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             }
         }
 
-        private void Phase1_Attack_BigCharge(NPC npc)
+        private static void Phase1_Attack_BigCharge(NPC npc)
         {
             ref float chargeTimer = ref npc.ai[1];
             float chargeX = npc.localAI[0];

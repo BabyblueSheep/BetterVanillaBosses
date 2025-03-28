@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.Utilities;
 
@@ -27,7 +28,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
         public static float WaveSpeed => 0.02f;
         public static float TargetVelocityMultiplier => 0.05f;
         //To prevent EoC from flying when too far
-        public static float MaximumTargetVelocityLength => 10f;
+        public static float MaximumTargetVelocityLength => 300f;
         public static float VelocityInterpolationChange => 0.02f;
         public static float RotationToPlayerSpeed => 0.1f;
 
@@ -64,12 +65,16 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                         idleState.Distance = ToSide_Distance;
                         break;
                 }
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    npc.netUpdate = true;
+                }
             }
 
             Vector2 targetPositionOffset = new Vector2(0, idleState.Distance);
             targetPositionOffset = targetPositionOffset.RotatedBy(targetPositionRotation * idleState.RotationRangeMultiplier + idleState.RotationOffset);
             Vector2 targetPosition = player.Center - targetPositionOffset;
-            Vector2 targetVelocity = (targetPosition - npc.Center);
+            Vector2 targetVelocity = targetPosition - npc.Center;
             float targetVelocityLength = targetVelocity.Length();
             targetVelocity = targetVelocity.SafeNormalize(Vector2.Zero) * MathF.Min(MaximumTargetVelocityLength, targetVelocityLength) * TargetVelocityMultiplier;
             npc.velocity =  Vector2.Lerp(npc.velocity, targetVelocity, VelocityInterpolationChange);
@@ -78,7 +83,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             
             if (generalState.Timer >= TotalPhaseTime)
             {
-                Phase1_EnterIdleState(npc);
+                Phase1_EnterAttackState(npc);
             }
         }
 
@@ -97,6 +102,11 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             generalState.Timer = -1;
 
             npc.TargetClosest();
+
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                npc.netUpdate = true;
+            }
         }
     }
 }

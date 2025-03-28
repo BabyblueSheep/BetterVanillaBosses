@@ -2,12 +2,14 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace BetterVanillaBosses.Content.EyeOfCthulhu;
 
@@ -91,6 +93,22 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             default:
                 return true;
         }
+    }
+
+    public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+    {
+        binaryWriter.Write(npc.localAI[0]);
+        binaryWriter.Write(npc.localAI[1]);
+        binaryWriter.Write(npc.localAI[2]);
+        binaryWriter.Write(npc.localAI[3]);
+    }
+
+    public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+    {
+        npc.localAI[0] = binaryReader.Read();
+        npc.localAI[1] = binaryReader.Read();
+        npc.localAI[2] = binaryReader.Read();
+        npc.localAI[3] = binaryReader.Read();
     }
 
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

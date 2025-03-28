@@ -26,6 +26,8 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
         //The length of the wave period at which EoC wobbles around the player
         public static float WaveSpeed => 0.02f;
         public static float TargetVelocityMultiplier => 0.05f;
+        //To prevent EoC from flying when too far
+        public static float MaximumTargetVelocityLength => 10f;
         public static float VelocityInterpolationChange => 0.02f;
         public static float RotationToPlayerSpeed => 0.1f;
 
@@ -36,9 +38,6 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
         public static float ToSide_RotationRangeMultiplier => Main.rand.NextFloat(0.3f, 0.5f);
         public static float ToSide_RotationOffset => Main.rand.NextFloat(0.7f, 1f);
         public static float ToSide_Distance => Main.rand.NextFloat(300f, 450f);
-
-
-
 
 
         private static void Idle(NPC npc)
@@ -66,14 +65,17 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                         break;
                 }
             }
+
             Vector2 targetPositionOffset = new Vector2(0, idleState.Distance);
             targetPositionOffset = targetPositionOffset.RotatedBy(targetPositionRotation * idleState.RotationRangeMultiplier + idleState.RotationOffset);
             Vector2 targetPosition = player.Center - targetPositionOffset;
-            Vector2 targetVelocity = (targetPosition - npc.Center) * TargetVelocityMultiplier;
+            Vector2 targetVelocity = (targetPosition - npc.Center);
+            float targetVelocityLength = targetVelocity.Length();
+            targetVelocity = targetVelocity.SafeNormalize(Vector2.Zero) * MathF.Min(MaximumTargetVelocityLength, targetVelocityLength) * TargetVelocityMultiplier;
             npc.velocity =  Vector2.Lerp(npc.velocity, targetVelocity, VelocityInterpolationChange);
 
             npc.rotation = npc.rotation.AngleLerp(npc.AngleTo(player.Center) - MathHelper.PiOver2, RotationToPlayerSpeed);
-
+            
             if (generalState.Timer >= TotalPhaseTime)
             {
                 Phase1_EnterIdleState(npc);
@@ -84,7 +86,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
         {
             GeneralState generalState = new GeneralState(npc);
             IdleState idleState = new IdleState(npc);
-
+            
             WeightedRandom<BehaviorType> randomIdleState = new WeightedRandom<BehaviorType>(Main.rand);
             randomIdleState.Add(BehaviorType.Idle_StayOnTop, 1.5f);
             randomIdleState.Add(BehaviorType.Idle_StayToLeft, 1f);

@@ -79,6 +79,20 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
         return false;
     }
 
+    public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
+    {
+        GeneralState generalState = new GeneralState(npc);
+        switch (generalState.CurrentBehaviorType)
+        {
+            case BehaviorType.Idle_StayOnTop:
+            case BehaviorType.Idle_StayToLeft:
+            case BehaviorType.Idle_StayToRight:
+                return false;
+            default:
+                return true;
+        }
+    }
+
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         Texture2D eyeTexture = ModContent.Request<Texture2D>("BetterVanillaBosses/Assets/EyeOfCthulhu/EyeOfCthulhu").Value;

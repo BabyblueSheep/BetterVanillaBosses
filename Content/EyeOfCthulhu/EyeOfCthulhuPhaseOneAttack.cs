@@ -22,7 +22,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             BehaviorType definitiveAttackState = randomAttackState.Get();
             npc.ai[0] = (int)definitiveAttackState;
 
-            generalTimer = 0;
+            generalTimer = -1;
 
             switch (definitiveAttackState)
             {
@@ -39,6 +39,8 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
 
         private static void Phase1_Attack_BigCharge(NPC npc)
         {
+            Phase1_EnterIdleState(npc);
+            /*
             ref float chargeTimer = ref npc.ai[1];
             float chargeX = npc.localAI[0];
             float chargeY = npc.localAI[1];
@@ -68,7 +70,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             else
             {
                 npc.rotation = npc.velocity.ToRotation() - MathHelper.PiOver2;
-            }
+            }*/
         }
     }
 }

@@ -21,6 +21,24 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             public ref float Distance => ref _npc.localAI[2];
         }
 
+        public static float TotalPhaseTime => 60 * 6;
+        public static float TimeUntilRandomizeState => 60 * 3;
+        //The length of the wave period at which EoC wobbles around the player
+        public static float WaveSpeed => 0.02f;
+        public static float TargetVelocityMultiplier => 0.05f;
+        public static float VelocityInterpolationChange => 0.02f;
+        public static float RotationToPlayerSpeed => 0.1f;
+
+
+        public static float OnTop_RotationRangeMultiplier => Main.rand.NextFloat(0.2f, 0.5f);
+        public static float OnTop_RotationOffset => Main.rand.NextFloat(-0.1f, 0.1f);
+        public static float OnTop_Distance => Main.rand.NextFloat(200f, 300f);
+        public static float ToSide_RotationRangeMultiplier => Main.rand.NextFloat(0.3f, 0.5f);
+        public static float ToSide_RotationOffset => Main.rand.NextFloat(0.7f, 1f);
+        public static float ToSide_Distance => Main.rand.NextFloat(300f, 450f);
+
+
+
 
 
         private static void Idle(NPC npc)
@@ -28,39 +46,37 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
             IdleState idleState = new IdleState(npc);
 
-            Main.NewText(generalState.CurrentBehaviorType);
-
             Player player = Main.player[npc.target];
 
-            float targetPositionRotation = MathF.Sin(generalState.Timer * 0.02f);
-            if (generalState.Timer % 80 == 0 && generalState.Timer % 160 != 0)
+            float targetPositionRotation = MathF.Sin(generalState.Timer * WaveSpeed);
+            if (generalState.Timer % TimeUntilRandomizeState == 0)
             {
                 switch (generalState.CurrentBehaviorType)
                 {
                     case BehaviorType.Idle_StayOnTop:
-                        idleState.RotationRangeMultiplier = MathHelper.Lerp(idleState.RotationRangeMultiplier, Main.rand.NextFloat(0.4f, 0.8f), 0.5f);
-                        idleState.RotationOffset += Main.rand.NextFloat(-0.2f, 0.2f);
-                        idleState.Distance = Main.rand.NextFloat(300f, 450f);
+                        idleState.RotationRangeMultiplier = OnTop_RotationRangeMultiplier;
+                        idleState.RotationOffset = OnTop_RotationOffset;
+                        idleState.Distance = OnTop_Distance;
                         break;
                     case BehaviorType.Idle_StayToLeft:
                     case BehaviorType.Idle_StayToRight:
-                        idleState.RotationRangeMultiplier = MathHelper.Lerp(idleState.RotationRangeMultiplier, Main.rand.NextFloat(0.4f, 0.6f), 0.5f);
-                        idleState.RotationOffset = Main.rand.NextFloat(-0.2f, 0.2f);
-                        idleState.Distance = Main.rand.NextFloat(400f, 550f);
+                        idleState.RotationRangeMultiplier = ToSide_RotationRangeMultiplier;
+                        idleState.RotationOffset = ToSide_RotationOffset * (generalState.CurrentBehaviorType == BehaviorType.Idle_StayToLeft ? -1 : 1);
+                        idleState.Distance = ToSide_Distance;
                         break;
                 }
             }
             Vector2 targetPositionOffset = new Vector2(0, idleState.Distance);
             targetPositionOffset = targetPositionOffset.RotatedBy(targetPositionRotation * idleState.RotationRangeMultiplier + idleState.RotationOffset);
             Vector2 targetPosition = player.Center - targetPositionOffset;
-            Vector2 targetVelocity = (targetPosition - npc.Center).SafeNormalize(Vector2.Zero) * 7;
-            npc.velocity = Vector2.Lerp(npc.velocity, targetVelocity, 0.05f);
+            Vector2 targetVelocity = (targetPosition - npc.Center) * TargetVelocityMultiplier;
+            npc.velocity =  Vector2.Lerp(npc.velocity, targetVelocity, VelocityInterpolationChange);
 
-            npc.rotation = npc.rotation.AngleLerp(npc.AngleTo(player.Center) - MathHelper.PiOver2, 0.1f);
+            npc.rotation = npc.rotation.AngleLerp(npc.AngleTo(player.Center) - MathHelper.PiOver2, RotationToPlayerSpeed);
 
-            if (generalState.Timer >= 240)
+            if (generalState.Timer >= TotalPhaseTime)
             {
-               Phase1_EnterAttackState(npc);
+                Phase1_EnterIdleState(npc);
             }
         }
 
@@ -76,28 +92,9 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             BehaviorType definitiveIdleState = randomIdleState.Get();
             generalState.CurrentBehaviorType = definitiveIdleState;
 
-            generalState.Timer = 0;
+            generalState.Timer = -1;
 
             npc.TargetClosest();
-
-            switch (definitiveIdleState)
-            {
-                case BehaviorType.Idle_StayOnTop:
-                    idleState.RotationRangeMultiplier = Main.rand.NextFloat(0.4f, 0.8f);
-                    idleState.RotationOffset = Main.rand.NextFloat(-0.2f, 0.2f);
-                    idleState.Distance = Main.rand.NextFloat(300f, 450f);
-                    break;
-                case BehaviorType.Idle_StayToLeft:
-                    idleState.RotationRangeMultiplier = Main.rand.NextFloat(0.4f, 0.6f);
-                    idleState.RotationOffset = Main.rand.NextFloat(-0.7f, -0.4f);
-                    idleState.Distance = Main.rand.NextFloat(400f, 550f);
-                    break;
-                case BehaviorType.Idle_StayToRight:
-                    idleState.RotationRangeMultiplier = Main.rand.NextFloat(0.4f, 0.6f);
-                    idleState.RotationOffset = Main.rand.NextFloat(0.4f, 0.7f);
-                    idleState.Distance = Main.rand.NextFloat(400f, 550f);
-                    break;
-            }
         }
     }
 }

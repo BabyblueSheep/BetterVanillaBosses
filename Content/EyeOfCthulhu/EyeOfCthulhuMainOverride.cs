@@ -59,7 +59,7 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
     {
         GeneralState currentState = new GeneralState(npc);
 
-        if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead || !Main.player[npc.target].active)
+        if (!npc.HasValidTarget)
         {
             npc.TargetClosest();
         }

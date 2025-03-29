@@ -13,6 +13,12 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu;
 
 internal sealed class ServantOfCthulhuMainOverride : GlobalNPC
 {
+    private static class ServantValues
+    {
+        public static float TargetVelocityLength => 5;
+        public static float VelocityInterpolationValue => 0.01f;
+    }
+
     public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
     {
         return lateInstantiation && entity.type == NPCID.ServantofCthulhu;
@@ -22,8 +28,18 @@ internal sealed class ServantOfCthulhuMainOverride : GlobalNPC
 
     public override bool PreAI(NPC npc)
     {
+        if (!npc.HasValidTarget)
+        {
+            npc.TargetClosest();
+        }
+        Vector2 targetDirection = (Main.player[npc.target].Center - npc.Center).SafeNormalize(Vector2.Zero);
+        npc.velocity = Vector2.Lerp(npc.velocity, targetDirection * ServantValues.TargetVelocityLength, ServantValues.VelocityInterpolationValue);
+        npc.rotation = npc.velocity.ToRotation() - MathHelper.PiOver2;
+
         return false;
     }
+
+    
 
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {

@@ -67,6 +67,8 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             }
             else if  (generalState.Timer == BigDashValues.TimeUntilDash)
             {
+                Vector2 targetVelocity = player.Center - npc.Center;
+                dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
                 npc.velocity = dashState.DashDirection * dashState.DashSpeed;
             }
             else if (generalState.Timer > BigDashValues.TimeUntilPostDashSlowdown && generalState.Timer < BigDashValues.TotalChargeTime)
@@ -123,13 +125,14 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
 
         private static class RapidDashValues
         {
+            public static float DistanceNeededToSelectAttack => 1200f;
             public static float TotalChargeAmount => 4;
             public static float TotalChargeTime => 50;
             public static float TimeUntilDash => 15;
-            public static float TimeUntilPostDashSlowdown => 25;
+            public static float TimeUntilPostDashSlowdown => 35;
             public static float ChargeUpSlowdownMultiplier => 0.95f;
-            public static float PostDashSlowdownMultiplier => 0.95f;
-            public static float ChargeSpeed => 15;
+            public static float PostDashSlowdownMultiplier => 0.9f;
+            public static float ChargeSpeed => 20f;
             //Charge up uses the same speed as the dash but multiplied, so that slower/faster charges have slower/faster charge ups
             public static float DashChargeUpMultiplier => 0.5f;
         }
@@ -160,6 +163,8 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             }
             else if (generalState.Timer == RapidDashValues.TimeUntilDash)
             {
+                Vector2 targetVelocity = player.Center - npc.Center;
+                dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
                 npc.velocity = dashState.DashDirection * RapidDashValues.ChargeSpeed;
             }
             else if (generalState.Timer > RapidDashValues.TimeUntilPostDashSlowdown && generalState.Timer < RapidDashValues.TotalChargeTime)
@@ -200,9 +205,14 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
         {
             GeneralState generalState = new GeneralState(npc);
 
+            Player player = Main.player[npc.target];
+
             WeightedRandom<BehaviorType> randomAttackState = new WeightedRandom<BehaviorType>();
             randomAttackState.Add(BehaviorType.Attack_BigDash, 1f);
-            randomAttackState.Add(BehaviorType.Attack_RapidDashes, 1f);
+            if (npc.Center.Distance(player.Center) < RapidDashValues.DistanceNeededToSelectAttack)
+            {
+                randomAttackState.Add(BehaviorType.Attack_RapidDashes, 1f);
+            }
             BehaviorType definitiveAttackState = randomAttackState.Get();
             generalState.CurrentBehaviorType = definitiveAttackState;
 

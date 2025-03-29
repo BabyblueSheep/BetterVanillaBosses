@@ -106,9 +106,9 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
         switch (generalState.CurrentBehaviorType)
         {
             case BehaviorType.Attack_BigDash:
-                return generalState.Timer > BigDashValues.TimeUntilDash;
+                return generalState.Timer > BigDashValues.TimeUntilDash && generalState.Timer < BigDashValues.TimeUntilPostDashSlowdown;
             case BehaviorType.Attack_RapidDashes:
-                return generalState.Timer > RapidDashValues.TimeUntilDash;
+                return generalState.Timer > RapidDashValues.TimeUntilDash && generalState.Timer < RapidDashValues.TimeUntilPostDashSlowdown;
             default:
                 return false;
         }

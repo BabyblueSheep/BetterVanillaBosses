@@ -201,7 +201,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
 
             WeightedRandom<BehaviorType> randomAttackState = new WeightedRandom<BehaviorType>();
-            //randomAttackState.Add(BehaviorType.Attack_BigDash, 1f);
+            randomAttackState.Add(BehaviorType.Attack_BigDash, 1f);
             randomAttackState.Add(BehaviorType.Attack_RapidDashes, 1f);
             BehaviorType definitiveAttackState = randomAttackState.Get();
             generalState.CurrentBehaviorType = definitiveAttackState;

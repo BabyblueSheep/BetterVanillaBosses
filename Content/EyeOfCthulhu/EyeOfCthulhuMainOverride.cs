@@ -102,14 +102,15 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
     public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
     {
         GeneralState generalState = new GeneralState(npc);
+
         switch (generalState.CurrentBehaviorType)
         {
-            case BehaviorType.Idle_StayOnTop:
-            case BehaviorType.Idle_StayToLeft:
-            case BehaviorType.Idle_StayToRight:
-                return false;
+            case BehaviorType.Attack_BigDash:
+                return generalState.Timer > BigDashValues.TimeUntilDash;
+            case BehaviorType.Attack_RapidDashes:
+                return generalState.Timer > RapidDashValues.TimeUntilDash;
             default:
-                return true;
+                return false;
         }
     }
 

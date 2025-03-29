@@ -49,9 +49,11 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
             BigDashState dashState = new BigDashState(npc);
 
+            Player player = Main.player[npc.target];
+
             if (generalState.Timer == 0)
             {
-                Vector2 targetVelocity = Main.player[npc.target].Center - npc.Center;
+                Vector2 targetVelocity = player.Center - npc.Center;
                 float dashVelocityLength = targetVelocity.Length();
                 dashState.DashSpeed = BigDashValues.DistanceFromPlayerToDashSpeed(dashVelocityLength);
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
@@ -73,9 +75,17 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             else if (generalState.Timer >= BigDashValues.TotalChargeTime)
             {
                 EnterIdleState(npc);
+                return;
             }
 
-            npc.rotation = dashState.DashDirection.ToRotation() - MathHelper.PiOver2;
+            if (generalState.Timer < BigDashValues.TimeUntilPostDashSlowdown)
+            {
+                npc.rotation = dashState.DashDirection.ToRotation() - MathHelper.PiOver2;
+            }
+            else
+            {
+                npc.rotation = npc.rotation.AngleLerp(npc.AngleTo(player.Center) - MathHelper.PiOver2, IdleValues.RotationToPlayerSpeed);
+            }
         }
 
         #endregion
@@ -123,11 +133,13 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
             RapidDashesState dashState = new RapidDashesState(npc);
 
+            Player player = Main.player[npc.target];
+
             if (generalState.Timer == 0)
             {
                 dashState.CurrentDashAmount = 0;
 
-                Vector2 targetVelocity = Main.player[npc.target].Center - npc.Center;
+                Vector2 targetVelocity = player.Center - npc.Center;
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
 
                 npc.velocity = -dashState.DashDirection * RapidDashValues.ChargeSpeed * RapidDashValues.DashChargeUpMultiplier;
@@ -150,17 +162,25 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 if (dashState.CurrentDashAmount >= RapidDashValues.TotalChargeAmount)
                 {
                     EnterIdleState(npc);
+                    return;
                 }
                 else
                 {
-                    Vector2 targetVelocity = Main.player[npc.target].Center - npc.Center;
+                    Vector2 targetVelocity = player.Center - npc.Center;
                     dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
 
                     generalState.Timer = RapidDashValues.TimeUntilDash - 1;
                 }
             }
 
-            npc.rotation = dashState.DashDirection.ToRotation() - MathHelper.PiOver2;
+            if (generalState.Timer < RapidDashValues.TimeUntilPostDashSlowdown)
+            {
+                npc.rotation = dashState.DashDirection.ToRotation() - MathHelper.PiOver2;
+            }
+            else
+            {
+                npc.rotation = npc.rotation.AngleLerp(npc.AngleTo(player.Center) - MathHelper.PiOver2, IdleValues.RotationToPlayerSpeed);
+            }
         }
 
         #endregion
@@ -170,7 +190,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
 
             WeightedRandom<BehaviorType> randomAttackState = new WeightedRandom<BehaviorType>();
-            //randomAttackState.Add(BehaviorType.Attack_BigDash, 1f);
+            randomAttackState.Add(BehaviorType.Attack_BigDash, 1f);
             randomAttackState.Add(BehaviorType.Attack_RapidDashes, 1f);
             BehaviorType definitiveAttackState = randomAttackState.Get();
             generalState.CurrentBehaviorType = definitiveAttackState;

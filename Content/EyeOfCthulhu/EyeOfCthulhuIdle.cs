@@ -86,11 +86,11 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             
             if (generalState.Timer >= IdleValues.TotalPhaseTime)
             {
-                Phase1_EnterAttackState(npc);
+                EnterAttackState(npc);
             }
         }
 
-        private static void Phase1_EnterIdleState(NPC npc)
+        private static void EnterIdleState(NPC npc)
         {
             GeneralState generalState = new GeneralState(npc);
             IdleState idleState = new IdleState(npc);

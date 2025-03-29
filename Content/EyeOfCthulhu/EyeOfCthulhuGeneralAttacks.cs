@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -113,6 +114,11 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                     _npc.localAI[2] = value;
                 }
             }
+            public bool StartedCharging
+            {
+                get => _npc.localAI[3] == 1f;
+                set => _npc.localAI[3] = value ? 1f : 0f;
+            }
         }
 
         private static class RapidDashValues
@@ -137,7 +143,11 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
 
             if (generalState.Timer == 0)
             {
-                dashState.CurrentDashAmount = 0;
+                if (!dashState.StartedCharging)
+                {
+                    dashState.StartedCharging = true;
+                    dashState.CurrentDashAmount = 0;
+                }
 
                 Vector2 targetVelocity = player.Center - npc.Center;
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
@@ -162,6 +172,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 if (dashState.CurrentDashAmount >= RapidDashValues.TotalChargeAmount)
                 {
                     EnterIdleState(npc);
+                    dashState.StartedCharging = false;
                     return;
                 }
                 else
@@ -169,11 +180,11 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                     Vector2 targetVelocity = player.Center - npc.Center;
                     dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
 
-                    generalState.Timer = RapidDashValues.TimeUntilDash - 1;
+                    generalState.Timer = -1;
                 }
             }
 
-            if (generalState.Timer < RapidDashValues.TimeUntilPostDashSlowdown)
+            if (generalState.Timer > RapidDashValues.TimeUntilDash && generalState.Timer < RapidDashValues.TimeUntilPostDashSlowdown)
             {
                 npc.rotation = dashState.DashDirection.ToRotation() - MathHelper.PiOver2;
             }
@@ -190,7 +201,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
 
             WeightedRandom<BehaviorType> randomAttackState = new WeightedRandom<BehaviorType>();
-            randomAttackState.Add(BehaviorType.Attack_BigDash, 1f);
+            //randomAttackState.Add(BehaviorType.Attack_BigDash, 1f);
             randomAttackState.Add(BehaviorType.Attack_RapidDashes, 1f);
             BehaviorType definitiveAttackState = randomAttackState.Get();
             generalState.CurrentBehaviorType = definitiveAttackState;

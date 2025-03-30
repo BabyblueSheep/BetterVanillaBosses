@@ -53,6 +53,12 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
         return lateInstantiation && entity.type == NPCID.EyeofCthulhu;
     }
 
+    public override void SetDefaults(NPC entity)
+    {
+        entity.width = (int)(entity.width * 0.75);
+        entity.height = (int)(entity.height * 0.75);
+    }
+
     public override bool InstancePerEntity => true;
 
     public override bool PreAI(NPC npc)

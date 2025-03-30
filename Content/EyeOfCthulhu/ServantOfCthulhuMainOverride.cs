@@ -39,8 +39,6 @@ internal sealed class ServantOfCthulhuMainOverride : GlobalNPC
         return false;
     }
 
-    
-
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         Texture2D eyeTexture = ModContent.Request<Texture2D>("BetterVanillaBosses/Assets/EyeOfCthulhu/ServantOfCthulhu").Value;

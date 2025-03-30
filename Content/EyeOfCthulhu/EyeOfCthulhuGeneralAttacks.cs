@@ -35,9 +35,9 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
 
         private static class BigDashValues
         {
-            public static float TotalChargeTime => 75;
-            public static float TimeUntilDash => 30;
-            public static float TimeUntilPostDashSlowdown => 60;
+            public static float TotalChargeTime => 100;
+            public static float TimeUntilDash => 25;
+            public static float TimeUntilPostDashSlowdown => TotalChargeTime - 15;
             public static float ChargeUpSlowdownMultiplier => 0.95f;
             public static float PostDashSlowdownMultiplier => 0.975f;
             //Charge up uses the same speed as the dash but multiplied, so that slower/faster charges have slower/faster charge ups
@@ -127,12 +127,12 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
         {
             public static float DistanceNeededToSelectAttack => 1200f;
             public static float TotalChargeAmount => 4;
-            public static float TotalChargeTime => 50;
-            public static float TimeUntilDash => 15;
-            public static float TimeUntilPostDashSlowdown => 35;
+            public static float TotalChargeTime => 55;
+            public static float TimeUntilDash => 20;
+            public static float TimeUntilPostDashSlowdown => TotalChargeTime - 15;
             public static float ChargeUpSlowdownMultiplier => 0.95f;
             public static float PostDashSlowdownMultiplier => 0.9f;
-            public static float ChargeSpeed => 20f;
+            public static float ChargeSpeed => 18f;
             //Charge up uses the same speed as the dash but multiplied, so that slower/faster charges have slower/faster charge ups
             public static float DashChargeUpMultiplier => 0.5f;
         }

@@ -13,6 +13,23 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu;
 
 internal sealed class ServantOfCthulhuMainOverride : GlobalNPC
 {
+    private ref struct ServantState(NPC npc)
+    {
+        private NPC _npc = npc;
+
+        public bool IsAttachedToBoss
+        {
+            get => _npc.ai[0] == 1f;
+            set => _npc.ai[0] = value ? 1f : 0f;
+        }
+
+        public int BossWhoAmI
+        {
+            get => (int)_npc.ai[1];
+            set => _npc.ai[1] = value;
+        }
+    }
+
     private static class ServantValues
     {
         public static float TargetVelocityLength => 5;

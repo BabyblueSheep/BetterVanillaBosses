@@ -55,8 +55,8 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
 
     public override void SetDefaults(NPC entity)
     {
-        entity.width = (int)(entity.width * 0.75);
-        entity.height = (int)(entity.height * 0.75);
+        entity.width = 76;
+        entity.height = 76;
     }
 
     public override bool InstancePerEntity => true;

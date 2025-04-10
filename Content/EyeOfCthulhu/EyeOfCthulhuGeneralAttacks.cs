@@ -167,6 +167,16 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
                 npc.velocity = dashState.DashDirection * RapidDashValues.ChargeSpeed;
             }
+            else if (generalState.Timer == RapidDashValues.TimeUntilPostDashSlowdown)
+            {
+                int projCount = Main.rand.Next(6, 8);
+                int randomness = 5;
+                int speed = 11;
+                for (int i = 0; i < projCount; i++)
+                {
+                    Projectile.NewProjectileDirect(npc.GetSource_FromThis(), npc.Center, dashState.DashDirection * speed, ProjectileID.DeathLaser, 1, 1, Main.myPlayer);
+                }
+            }
             else if (generalState.Timer > RapidDashValues.TimeUntilPostDashSlowdown && generalState.Timer < RapidDashValues.TotalChargeTime)
             {
                 npc.velocity *= RapidDashValues.PostDashSlowdownMultiplier;

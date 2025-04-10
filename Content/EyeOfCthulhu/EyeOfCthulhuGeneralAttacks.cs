@@ -179,6 +179,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 int tearAmount = Main.rand.Next(RapidDashValues.tearShotgunMin, RapidDashValues.tearShotgunMax);
                 // TODO: make not look like ass
                 // should add an offset on spawn so the tears come from the pupil
+                // check for distance from ground? kinda unsatisfying and gross when he shoots tears immediately into a block
                 for (int i = 0; i < tearAmount; i++)
                 {
                     Projectile.NewProjectileDirect(npc.GetSource_FromThis(), npc.Center, dashState.DashDirection * RapidDashValues.tearSpeed + Main.rand.NextVector2Circular(RapidDashValues.tearSpread, RapidDashValues.tearSpread), ModContent.ProjectileType<Teardrop>(), 1, 1, Main.myPlayer);

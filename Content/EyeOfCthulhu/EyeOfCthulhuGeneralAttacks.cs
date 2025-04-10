@@ -135,6 +135,13 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             public static float ChargeSpeed => 18f;
             //Charge up uses the same speed as the dash but multiplied, so that slower/faster charges have slower/faster charge ups
             public static float DashChargeUpMultiplier => 0.5f;
+
+            #region Tears
+            public static int tearShotgunMin = 6;
+            public static int tearShotgunMax = 8;
+            public static int tearSpread = 3;
+            public static int tearSpeed = 14;
+            #endregion
         }
 
         private static void Attack_RapidDashes(NPC npc)
@@ -169,12 +176,12 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             }
             else if (generalState.Timer == RapidDashValues.TimeUntilPostDashSlowdown)
             {
-                int projCount = Main.rand.Next(6, 8);
-                int randomness = 5;
-                int speed = 11;
-                for (int i = 0; i < projCount; i++)
+                int tearAmount = Main.rand.Next(RapidDashValues.tearShotgunMin, RapidDashValues.tearShotgunMax);
+                // TODO: make not look like ass
+                // should add an offset on spawn so the tears come from the pupil
+                for (int i = 0; i < tearAmount; i++)
                 {
-                    Projectile.NewProjectileDirect(npc.GetSource_FromThis(), npc.Center, dashState.DashDirection * speed, ProjectileID.DeathLaser, 1, 1, Main.myPlayer);
+                    Projectile.NewProjectileDirect(npc.GetSource_FromThis(), npc.Center, dashState.DashDirection * RapidDashValues.tearSpeed + Main.rand.NextVector2Circular(RapidDashValues.tearSpread, RapidDashValues.tearSpread), ModContent.ProjectileType<Teardrop>(), 1, 1, Main.myPlayer);
                 }
             }
             else if (generalState.Timer > RapidDashValues.TimeUntilPostDashSlowdown && generalState.Timer < RapidDashValues.TotalChargeTime)

@@ -54,7 +54,7 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
 
     private static class GeneralValues
     {
-        public static float PercentageOfHealthForPhase2Transition => 0.8f;
+        public static float PercentageOfHealthForPhase2Transition => 0.75f;
     }
 
     private static bool IsInPhase2(NPC npc) => npc.ai[2] == (int)StageType.Phase2;

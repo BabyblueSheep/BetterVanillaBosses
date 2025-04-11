@@ -23,6 +23,7 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
 
         Attack_BigDash,
         Attack_RapidDashes,
+        Attack_SummonServants
     }
 
     public enum StageType
@@ -98,6 +99,9 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             case BehaviorType.Attack_RapidDashes:
                 Attack_RapidDashes(npc);
                 break;
+            case BehaviorType.Attack_SummonServants:
+                Attack_SummonServants(npc);
+                break;
         }
 
         currentState.Timer++;
@@ -126,6 +130,8 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
         binaryWriter.Write(npc.localAI[1]);
         binaryWriter.Write(npc.localAI[2]);
         binaryWriter.Write(npc.localAI[3]);
+        binaryWriter.Write(ServantSpawnDirection.X);
+        binaryWriter.Write(ServantSpawnDirection.Y);
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
@@ -134,6 +140,7 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
         npc.localAI[1] = binaryReader.Read();
         npc.localAI[2] = binaryReader.Read();
         npc.localAI[3] = binaryReader.Read();
+        ServantSpawnDirection = new Vector2(binaryReader.ReadSingle(), binaryReader.ReadSingle());
     }
 
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

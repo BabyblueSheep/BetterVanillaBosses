@@ -219,6 +219,87 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
 
         #endregion
 
+        #region Summon servants
+
+        public Vector2 ServantSpawnDirection { get; set; }
+
+        private ref struct SummonServantsState(NPC npc)
+        {
+            private NPC _npc = npc;
+
+            public ref float CurrentSpawnDelayValue => ref _npc.localAI[0];
+            public ref float DelayDecreasePerFrame => ref _npc.localAI[1];
+            public int AmountOfTimesDelayReachedZero
+            {
+                get => (int)_npc.localAI[2];
+                set
+                {
+                    _npc.localAI[2] = value;
+                }
+            }
+            public Vector2 ServantSpawnDirection
+            {
+                get => _npc.GetGlobalNPC<EyeOfCthulhuBehaviorOverride>().ServantSpawnDirection;
+                set
+                {
+                    _npc.GetGlobalNPC<EyeOfCthulhuBehaviorOverride>().ServantSpawnDirection = value;
+                }
+            }
+        }
+
+        private static class SummonServantsValues
+        {
+            public static float VelocitySlowdownMultiplier => 0.975f;
+            //Arbitary value; doesn't exactly matter since the delay decrease is what's changed
+            public static float TotalSpawnDelay => 100;
+            public static int TotalAmountOfServantsToSummon => 8;
+
+            public static float DelayDecreaseSpeed => Main.rand.NextFloat(10f, 20f);
+            public static float ServantInitialSpeed => Main.rand.NextFloat(5f, 10f);
+            public static Vector2 ServantInitialDirection(Vector2 eyeDirection) =>
+                (Main.rand.NextBool() ? eyeDirection.RotatedBy(MathHelper.PiOver2) : eyeDirection.RotatedBy(-MathHelper.PiOver2))
+                .RotatedByRandom(0.3f);
+        }
+
+        private static void Attack_SummonServants(NPC npc)
+        {
+            GeneralState generalState = new GeneralState(npc);
+            SummonServantsState summonState = new SummonServantsState(npc);
+
+            Player player = Main.player[npc.target];
+
+            if (generalState.Timer == 0)
+            {
+                summonState.CurrentSpawnDelayValue = SummonServantsValues.TotalSpawnDelay;
+                summonState.DelayDecreasePerFrame = SummonServantsValues.DelayDecreaseSpeed;
+                summonState.AmountOfTimesDelayReachedZero = 0;
+
+                Vector2 targetDirection = player.Center - npc.Center;
+                summonState.ServantSpawnDirection = targetDirection.SafeNormalize(Vector2.UnitY);
+            }
+
+            npc.velocity *= SummonServantsValues.VelocitySlowdownMultiplier;
+
+            summonState.CurrentSpawnDelayValue -= summonState.DelayDecreasePerFrame;
+            if (summonState.CurrentSpawnDelayValue <= 0)
+            {
+                summonState.CurrentSpawnDelayValue += SummonServantsValues.TotalSpawnDelay;
+                NPC servant = NPC.NewNPCDirect(npc.GetSpawnSourceForNPCFromNPCAI(), npc.Center, NPCID.ServantofCthulhu, npc.whoAmI);
+                servant.velocity = SummonServantsValues.ServantInitialDirection(summonState.ServantSpawnDirection.SafeNormalize(Vector2.UnitY)) * SummonServantsValues.ServantInitialSpeed;
+                summonState.AmountOfTimesDelayReachedZero++;
+            }
+
+            npc.rotation = npc.rotation.AngleLerp(npc.AngleTo(player.Center) - MathHelper.PiOver2, IdleValues.RotationToPlayerSpeed);
+
+            if (summonState.AmountOfTimesDelayReachedZero > SummonServantsValues.TotalAmountOfServantsToSummon)
+            {
+                EnterIdleState(npc);
+                return;
+            }
+        }
+
+        #endregion
+
         private static void EnterAttackState(NPC npc)
         {
             GeneralState generalState = new GeneralState(npc);
@@ -230,6 +311,10 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             if (npc.Center.Distance(player.Center) < RapidDashValues.DistanceNeededToSelectAttack)
             {
                 randomAttackState.Add(BehaviorType.Attack_RapidDashes, 1f);
+            }
+            if (!Main.npc.Any((npc) => npc.active && npc.type == NPCID.ServantofCthulhu))
+            {
+                randomAttackState.Add(BehaviorType.Attack_SummonServants, 3f);
             }
             BehaviorType definitiveAttackState = randomAttackState.Get();
             generalState.CurrentBehaviorType = definitiveAttackState;

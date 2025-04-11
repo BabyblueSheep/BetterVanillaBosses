@@ -23,13 +23,16 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
 
         Attack_BigDash,
         Attack_RapidDashes,
-        Attack_SummonServants
+        Attack_SummonServants,
+
+        Idle_Phase2Transition,
     }
 
     public enum StageType
     {
         Spawned,
         Phase1,
+        Phase2,
     }
 
     public ref struct GeneralState(NPC npc)
@@ -48,6 +51,13 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             set => _npc.ai[2] = (float)value;
         }
     }
+
+    private static class GeneralValues
+    {
+        public static float PercentageOfHealthForPhase2Transition => 0.5f;
+    }
+
+    private static bool IsInPhase2(NPC npc) => npc.ai[2] == (int)StageType.Phase2;
 
     public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
     {
@@ -80,10 +90,16 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             return false;
         }
 
-        if (currentState.CurrentStageType == StageType.Spawned)
+        switch (currentState.CurrentStageType)
         {
-            EnterIdleState(npc);
-            currentState.CurrentStageType = StageType.Phase1;
+            case StageType.Spawned:
+                EnterIdleState(npc);
+                currentState.CurrentStageType = StageType.Phase1;
+                break;
+            case StageType.Phase1:
+                break;
+            case StageType.Phase2:
+                break;
         }
 
         switch (currentState.CurrentBehaviorType)
@@ -92,6 +108,9 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             case BehaviorType.Idle_StayToLeft:
             case BehaviorType.Idle_StayToRight:
                 Idle(npc);
+                break;
+            case BehaviorType.Idle_Phase2Transition:
+                Idle_Phase2Transition(npc);
                 break;
             case BehaviorType.Attack_BigDash:
                 Attack_BigDash(npc);
@@ -118,7 +137,7 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
             case BehaviorType.Attack_BigDash:
                 return generalState.Timer > BigDashValues.TimeUntilDash && generalState.Timer < BigDashValues.TimeUntilPostDashSlowdown;
             case BehaviorType.Attack_RapidDashes:
-                return generalState.Timer > RapidDashValues.TimeUntilDash && generalState.Timer < RapidDashValues.TimeUntilPostDashSlowdown;
+                return generalState.Timer > RapidDashValues.TimeUntilDash(npc) && generalState.Timer < RapidDashValues.TimeUntilPostDashSlowdown(npc);
             default:
                 return false;
         }
@@ -147,7 +166,7 @@ internal sealed partial class EyeOfCthulhuBehaviorOverride : GlobalNPC
     {
         Texture2D eyeTexture = ModContent.Request<Texture2D>("BetterVanillaBosses/Assets/EyeOfCthulhu/EyeOfCthulhu").Value;
 
-        spriteBatch.Draw(eyeTexture, npc.Center - Main.screenPosition, eyeTexture.Frame(), npc.GetAlpha(drawColor), npc.rotation, eyeTexture.Size() / 2, 1f, SpriteEffects.None, 0f);
+        spriteBatch.Draw(eyeTexture, npc.Center - Main.screenPosition, eyeTexture.Frame(1, 2, 0, IsInPhase2(npc) ? 1 : 0, 0, 1), npc.GetAlpha(drawColor), npc.rotation, new Vector2(eyeTexture.Width / 2f, eyeTexture.Height / 4f), 1f, SpriteEffects.None, 0f);
 
         return false;
     }

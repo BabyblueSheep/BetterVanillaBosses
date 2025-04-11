@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BetterVanillaBosses.Common.Utils;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.Utilities;
+using static BetterVanillaBosses.Content.EyeOfCthulhu.EyeOfCthulhuBehaviorOverride;
 
 namespace BetterVanillaBosses.Content.EyeOfCthulhu
 {
@@ -40,16 +42,20 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             public static float OnTop_Distance => Main.rand.NextFloat(200f, 300f);
             public static float ToSide_RotationRangeMultiplier => Main.rand.NextFloat(0.3f, 0.5f);
             public static float ToSide_RotationOffset => Main.rand.NextFloat(0.7f, 1f);
-            public static float ToSide_Distance => Main.rand.NextFloat(300f, 450f);
+            public static float ToSide_Distance(NPC npc) => !IsInPhase2(npc) ? Main.rand.NextFloat(300f, 450f) : Main.rand.NextFloat(200f, 300f);
         }
 
+        private static class Phase2TransitionValues
+        {
+            public static float VelocityMultiplier => 0.95f;
+        }
 
         private static void Idle(NPC npc)
         {
             GeneralState generalState = new GeneralState(npc);
             IdleState idleState = new IdleState(npc);
 
-            Player player = Main.player[npc.target];
+            Player player = npc.GetPlayerTarget();
 
             float targetPositionRotation = MathF.Sin(generalState.Timer * IdleValues.WaveSpeed);
             if (generalState.Timer % IdleValues.TimeUntilRandomizeState == 0)
@@ -65,7 +71,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                     case BehaviorType.Idle_StayToRight:
                         idleState.RotationRangeMultiplier = IdleValues.ToSide_RotationRangeMultiplier;
                         idleState.RotationOffset = IdleValues.ToSide_RotationOffset * (generalState.CurrentBehaviorType == BehaviorType.Idle_StayToLeft ? -1 : 1);
-                        idleState.Distance = IdleValues.ToSide_Distance;
+                        idleState.Distance = IdleValues.ToSide_Distance(npc);
                         break;
                 }
                 if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -90,15 +96,39 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             }
         }
 
+        private void Idle_Phase2Transition(NPC npc)
+        {
+            GeneralState generalState = new GeneralState(npc);
+
+            npc.velocity *= Phase2TransitionValues.VelocityMultiplier;
+            npc.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+
+            if (generalState.Timer > 60)
+            {
+                generalState.CurrentStageType = StageType.Phase2;
+            }
+            if (generalState.Timer > 120)
+            {
+                EnterIdleState(npc);
+            }
+        }
+
         private static void EnterIdleState(NPC npc)
         {
             GeneralState generalState = new GeneralState(npc);
             IdleState idleState = new IdleState(npc);
             
             WeightedRandom<BehaviorType> randomIdleState = new WeightedRandom<BehaviorType>(Main.rand);
-            randomIdleState.Add(BehaviorType.Idle_StayOnTop, 1.5f);
-            randomIdleState.Add(BehaviorType.Idle_StayToLeft, 1f);
-            randomIdleState.Add(BehaviorType.Idle_StayToRight, 1f);
+            if (npc.GetLifePercent() < GeneralValues.PercentageOfHealthForPhase2Transition && !IsInPhase2(npc))
+            {
+                randomIdleState.Add(BehaviorType.Idle_Phase2Transition, 1f);
+            }
+            else
+            {
+                randomIdleState.Add(BehaviorType.Idle_StayOnTop, 1.5f);
+                randomIdleState.Add(BehaviorType.Idle_StayToLeft, 1f);
+                randomIdleState.Add(BehaviorType.Idle_StayToRight, 1f);
+            }
             BehaviorType definitiveIdleState = randomIdleState.Get();
             generalState.CurrentBehaviorType = definitiveIdleState;
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BetterVanillaBosses.Common.Utils;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
@@ -51,7 +52,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
             BigDashState dashState = new BigDashState(npc);
 
-            Player player = Main.player[npc.target];
+            Player player = npc.GetPlayerTarget();
 
             if (generalState.Timer == 0)
             {
@@ -129,22 +130,18 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
         private static class RapidDashValues
         {
             public static float DistanceNeededToSelectAttack => 1200f;
-            public static float TotalChargeAmount => 4;
-            public static float TotalChargeTime => 55;
-            public static float TimeUntilDash => 20;
-            public static float TimeUntilPostDashSlowdown => TotalChargeTime - 15;
+            public static float TotalChargeAmount(NPC npc) => IsInPhase2(npc) ? 5 : 4;
+            public static float TotalChargeTime(NPC npc) => IsInPhase2(npc) ? 55 : 65;
+            public static float TimeUntilDash(NPC npc) => IsInPhase2(npc) ? 15 : 20;
+            public static float TimeUntilPostDashSlowdown(NPC npc) => TotalChargeTime(npc) - (IsInPhase2(npc) ? 15 : 20);
             public static float ChargeUpSlowdownMultiplier => 0.95f;
             public static float PostDashSlowdownMultiplier => 0.9f;
-            public static float ChargeSpeed => 18f;
+            public static float ChargeSpeed(NPC npc) => 15f;
             //Charge up uses the same speed as the dash but multiplied, so that slower/faster charges have slower/faster charge ups
             public static float DashChargeUpMultiplier => 0.5f;
 
-            #region Tears
-            public static int tearShotgunMin = 6;
-            public static int tearShotgunMax = 8;
-            public static int tearSpread = 3;
-            public static int tearSpeed = 14;
-            #endregion
+            public static int TearAmount => Main.rand.Next(6, 8 + 1);
+            public static Vector2 TearVelocity(NPC npc, Vector2 direction) => direction * 14f + Main.rand.NextVector2Circular(3f, 3f);
         }
 
         private static void Attack_RapidDashes(NPC npc)
@@ -152,7 +149,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
             RapidDashesState dashState = new RapidDashesState(npc);
 
-            Player player = Main.player[npc.target];
+            Player player = npc.GetPlayerTarget();
 
             if (generalState.Timer == 0)
             {
@@ -165,39 +162,39 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 Vector2 targetVelocity = player.Center - npc.Center;
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
 
-                npc.velocity = -dashState.DashDirection * RapidDashValues.ChargeSpeed * RapidDashValues.DashChargeUpMultiplier;
+                npc.velocity = -dashState.DashDirection * RapidDashValues.ChargeSpeed(npc) * RapidDashValues.DashChargeUpMultiplier;
             }
-            else if (generalState.Timer < RapidDashValues.TimeUntilDash)
+            else if (generalState.Timer < RapidDashValues.TimeUntilDash(npc))
             {
                 npc.velocity *= RapidDashValues.ChargeUpSlowdownMultiplier;
             }
-            else if (generalState.Timer == RapidDashValues.TimeUntilDash)
+            else if (generalState.Timer == RapidDashValues.TimeUntilDash(npc))
             {
                 Vector2 targetVelocity = player.Center - npc.Center;
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
-                npc.velocity = dashState.DashDirection * RapidDashValues.ChargeSpeed;
+                npc.velocity = dashState.DashDirection * RapidDashValues.ChargeSpeed(npc);
 
                 SoundEngine.PlaySound(SoundID.DD2_BetsyWindAttack, npc.Center);
             }
-            else if (generalState.Timer == RapidDashValues.TimeUntilPostDashSlowdown)
+            else if (generalState.Timer == RapidDashValues.TimeUntilPostDashSlowdown(npc))
             {
-                int tearAmount = Main.rand.Next(RapidDashValues.tearShotgunMin, RapidDashValues.tearShotgunMax);
+                int tearAmount = RapidDashValues.TearAmount;
                 // TODO: make not look like ass
                 // should add an offset on spawn so the tears come from the pupil
                 // check for distance from ground? kinda unsatisfying and gross when he shoots tears immediately into a block
                 for (int i = 0; i < tearAmount; i++)
                 {
-                    Projectile.NewProjectileDirect(npc.GetSource_FromThis(), npc.Center, dashState.DashDirection * RapidDashValues.tearSpeed + Main.rand.NextVector2Circular(RapidDashValues.tearSpread, RapidDashValues.tearSpread), ModContent.ProjectileType<Teardrop>(), 1, 1, Main.myPlayer);
+                    Projectile.NewProjectileDirect(npc.GetSource_FromThis(), npc.Center, RapidDashValues.TearVelocity(npc, dashState.DashDirection), ModContent.ProjectileType<Teardrop>(), 1, 1, Main.myPlayer);
                 }
             }
-            else if (generalState.Timer > RapidDashValues.TimeUntilPostDashSlowdown && generalState.Timer < RapidDashValues.TotalChargeTime)
+            else if (generalState.Timer > RapidDashValues.TimeUntilPostDashSlowdown(npc) && generalState.Timer < RapidDashValues.TotalChargeTime(npc))
             {
                 npc.velocity *= RapidDashValues.PostDashSlowdownMultiplier;
             }
-            else if (generalState.Timer >= RapidDashValues.TotalChargeTime)
+            else if (generalState.Timer >= RapidDashValues.TotalChargeTime(npc))
             {
                 dashState.CurrentDashAmount++;
-                if (dashState.CurrentDashAmount >= RapidDashValues.TotalChargeAmount)
+                if (dashState.CurrentDashAmount >= RapidDashValues.TotalChargeAmount(npc))
                 {
                     EnterIdleState(npc);
                     dashState.StartedCharging = false;
@@ -212,7 +209,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 }
             }
 
-            if (generalState.Timer > RapidDashValues.TimeUntilDash && generalState.Timer < RapidDashValues.TimeUntilPostDashSlowdown)
+            if (generalState.Timer > RapidDashValues.TimeUntilDash(npc) && generalState.Timer < RapidDashValues.TimeUntilPostDashSlowdown(npc))
             {
                 npc.rotation = dashState.DashDirection.ToRotation() - MathHelper.PiOver2;
             }
@@ -271,7 +268,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             GeneralState generalState = new GeneralState(npc);
             SummonServantsState summonState = new SummonServantsState(npc);
 
-            Player player = Main.player[npc.target];
+            Player player = npc.GetPlayerTarget();
 
             if (generalState.Timer == 0)
             {
@@ -311,7 +308,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
         {
             GeneralState generalState = new GeneralState(npc);
 
-            Player player = Main.player[npc.target];
+            Player player = npc.GetPlayerTarget();
 
             WeightedRandom<BehaviorType> randomAttackState = new WeightedRandom<BehaviorType>();
             randomAttackState.Add(BehaviorType.Attack_BigDash, 1f);

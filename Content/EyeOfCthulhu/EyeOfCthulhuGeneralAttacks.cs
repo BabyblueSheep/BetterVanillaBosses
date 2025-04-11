@@ -7,6 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.Utilities;
@@ -70,6 +71,8 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 Vector2 targetVelocity = player.Center - npc.Center;
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
                 npc.velocity = dashState.DashDirection * dashState.DashSpeed;
+
+                SoundEngine.PlaySound(SoundID.DD2_BetsyWindAttack, npc.Center);
             }
             else if (generalState.Timer > BigDashValues.TimeUntilPostDashSlowdown && generalState.Timer < BigDashValues.TotalChargeTime)
             {
@@ -173,6 +176,8 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 Vector2 targetVelocity = player.Center - npc.Center;
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
                 npc.velocity = dashState.DashDirection * RapidDashValues.ChargeSpeed;
+
+                SoundEngine.PlaySound(SoundID.DD2_BetsyWindAttack, npc.Center);
             }
             else if (generalState.Timer == RapidDashValues.TimeUntilPostDashSlowdown)
             {
@@ -287,6 +292,8 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
                 NPC servant = NPC.NewNPCDirect(npc.GetSpawnSourceForNPCFromNPCAI(), npc.Center, NPCID.ServantofCthulhu, npc.whoAmI);
                 servant.velocity = SummonServantsValues.ServantInitialDirection(summonState.ServantSpawnDirection.SafeNormalize(Vector2.UnitY)) * SummonServantsValues.ServantInitialSpeed;
                 summonState.AmountOfTimesDelayReachedZero++;
+
+                SoundEngine.PlaySound(SoundID.NPCDeath1, npc.Center);
             }
 
             npc.rotation = npc.rotation.AngleLerp(npc.AngleTo(player.Center) - MathHelper.PiOver2, IdleValues.RotationToPlayerSpeed);

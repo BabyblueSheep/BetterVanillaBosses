@@ -37,7 +37,7 @@ public class Teardrop : ModProjectile
     }
     public override void OnKill(int timeLeft)
     {
-        SoundEngine.PlaySound(SoundID.Drip, Projectile.Center);
+        SoundEngine.PlaySound(SoundID.Splash, Projectile.Center);
         for (int i = 0; i < 10; i++)
         {
             Dust d = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, DustID.Dirt, 0f, 0f);

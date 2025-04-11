@@ -37,14 +37,14 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
 
         private static class BigDashValues
         {
-            public static float TotalChargeTime => 100;
-            public static float TimeUntilDash => 25;
-            public static float TimeUntilPostDashSlowdown => TotalChargeTime - 15;
+            public static float TotalChargeTime(NPC npc) => IsInPhase2(npc) ? 80 : 100;
+            public static float TimeUntilDash(NPC npc) => 25;
+            public static float TimeUntilPostDashSlowdown(NPC npc) => TotalChargeTime(npc) - 15;
             public static float ChargeUpSlowdownMultiplier => 0.95f;
             public static float PostDashSlowdownMultiplier => 0.975f;
             //Charge up uses the same speed as the dash but multiplied, so that slower/faster charges have slower/faster charge ups
             public static float DashChargeUpMultiplier => 0.5f;
-            public static float DistanceFromPlayerToDashSpeed(float distance) => Utils.Remap(distance, 400, 1200, 15, 40);
+            public static float DistanceFromPlayerToDashSpeed(NPC npc, float distance) => Utils.Remap(distance, 400, 1200, IsInPhase2(npc) ? 20 : 15, IsInPhase2(npc) ? 40 : 30);
         }
 
         private static void Attack_BigDash(NPC npc)
@@ -58,16 +58,16 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             {
                 Vector2 targetVelocity = player.Center - npc.Center;
                 float dashVelocityLength = targetVelocity.Length();
-                dashState.DashSpeed = BigDashValues.DistanceFromPlayerToDashSpeed(dashVelocityLength);
+                dashState.DashSpeed = BigDashValues.DistanceFromPlayerToDashSpeed(npc, dashVelocityLength);
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
 
                 npc.velocity = -dashState.DashDirection * (dashState.DashSpeed * BigDashValues.DashChargeUpMultiplier);
             }
-            else if (generalState.Timer < BigDashValues.TimeUntilDash)
+            else if (generalState.Timer < BigDashValues.TimeUntilDash(npc))
             {
                 npc.velocity *= BigDashValues.ChargeUpSlowdownMultiplier;
             }
-            else if  (generalState.Timer == BigDashValues.TimeUntilDash)
+            else if  (generalState.Timer == BigDashValues.TimeUntilDash(npc))
             {
                 Vector2 targetVelocity = player.Center - npc.Center;
                 dashState.DashDirection = targetVelocity.SafeNormalize(Vector2.Zero);
@@ -75,17 +75,17 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
 
                 SoundEngine.PlaySound(SoundID.DD2_BetsyWindAttack, npc.Center);
             }
-            else if (generalState.Timer > BigDashValues.TimeUntilPostDashSlowdown && generalState.Timer < BigDashValues.TotalChargeTime)
+            else if (generalState.Timer > BigDashValues.TimeUntilPostDashSlowdown(npc) && generalState.Timer < BigDashValues.TotalChargeTime(npc))
             {
                 npc.velocity *= BigDashValues.PostDashSlowdownMultiplier;
             }
-            else if (generalState.Timer >= BigDashValues.TotalChargeTime)
+            else if (generalState.Timer >= BigDashValues.TotalChargeTime(npc))
             {
                 EnterIdleState(npc);
                 return;
             }
 
-            if (generalState.Timer < BigDashValues.TimeUntilPostDashSlowdown)
+            if (generalState.Timer < BigDashValues.TimeUntilPostDashSlowdown(npc))
             {
                 npc.rotation = dashState.DashDirection.ToRotation() - MathHelper.PiOver2;
             }
@@ -318,7 +318,7 @@ namespace BetterVanillaBosses.Content.EyeOfCthulhu
             }
             if (!Main.npc.Any((npc) => npc.active && npc.type == NPCID.ServantofCthulhu))
             {
-                randomAttackState.Add(BehaviorType.Attack_SummonServants, 3f);
+                randomAttackState.Add(BehaviorType.Attack_SummonServants, IsInPhase2(npc) ? 0.75f : 3f);
             }
             BehaviorType definitiveAttackState = randomAttackState.Get();
             generalState.CurrentBehaviorType = definitiveAttackState;
